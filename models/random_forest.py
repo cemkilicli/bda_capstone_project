@@ -53,9 +53,9 @@ columns = exp_data_data.columns
 # Create train test split
 features_train, features_test, labels_train, labels_test = train_test_split(exp_data_data, exp_data_labels, test_size=0.25, random_state=42)
 
-from sklearn.tree import DecisionTreeClassifier
+from sklearn.ensemble import RandomForestClassifier
 
-clf_rand = DecisionTreeClassifier()
+clf_rand = RandomForestClassifier(n_jobs=-1, n_estimators=350)
 clf_rand.fit(features_train,labels_train)
 
 pred = clf_rand.predict(features_test)

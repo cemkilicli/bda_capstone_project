@@ -4,24 +4,54 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 #Load clean sample data
-exp_data_train = pd.read_csv('../exp_data/sampled_data/sample_booked.csv', delimiter=',')
-exp_data_destinations = pd.read_csv('../exp_data/raw_data/destinations.csv', delimiter=',')
+exp_data_train = pd.read_csv('../exp_data/sampled/sample_mini.csv', delimiter=',')
+exp_data_destinations = pd.read_csv('../exp_data/original_data/destinations.csv', delimiter=',')
+
+#print exp_data_train["hotel_cluster"].value_counts()
+
+#groups_count = exp_data_train.groupby(["hotel_cluster"]).count()
+
+
 
 ### ---- Trainning Data Analysis ---- ###
 #Print data frame information
 print exp_data_train.info()
+print exp_data_train.head(5)
+
+#exp_data_train = exp_data_train.groupby(["hotel_cluster","srch_destination_id","srch_destination_type_id"], as_index=False).agg({"is_booking":"sum"})
 
 
-#Plot the SalePrice to understand the skewness of data
-sns.countplot(x='hotel_cluster', data = exp_data_train, color = 'g')
-plt.yticks(label='small')
-plt.xticks(label='small')
+
+sns.stripplot(x="srch_ci", y="hotel_cluster", hue="is_booking",
+              data=exp_data_train, dodge=True, jitter=True,
+              alpha=.25, zorder=1)
 plt.show()
+
+#print hotel_cluster
+
+"""1.
+#Plot the hotel cluster to understand the skewness of data
+sns.countplot(x='hotel_cluster', data = exp_data_train)
+plt.yticks(label='small')
+plt.ylabel('Frequency')
+plt.xticks(label='small', rotation=90)
+plt.xlabel('Hotel Clusters')
+plt.show()
+
+
+#Plot the hotel cluster to understand the skewness of data
+sns.countplot(x='is_booking', data = exp_data_train)
+plt.yticks(label='small')
+plt.ylabel('Frequency')
+plt.xticks(label='small')
+plt.xlabel('Bookings & Clicks')
+plt.show()
+
 
 
 #Find correlation
 corrolations = exp_data_train.corr()['hotel_cluster'][:-1]
-golden_feature_list = corrolations[abs(corrolations) > 0.5].sort_values(ascending = False)
+golden_feature_list = corrolations[abs(corrolations)].sort_values(ascending = False)
 print("There is {} strongly correlated values with hotel_cluster:\n{}".format(len(golden_feature_list), golden_feature_list))
 
 
@@ -40,6 +70,8 @@ plt.xticks(rotation=30, label='small')
 
 plt.show()
 
+
+
 ### ---- Destinations Data Analysis ---- ###
 
 #Print data frame information
@@ -55,7 +87,4 @@ print exp_data_destinations.head(5)
 set(exp_data_destinations.dtypes.tolist())
 dfnum_dest = exp_data_destinations.select_dtypes(include = ['float64', 'int64'])
 print dfnum_dest.info()
-
-
-
-
+"""

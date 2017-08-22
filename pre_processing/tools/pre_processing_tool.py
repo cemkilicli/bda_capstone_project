@@ -28,6 +28,17 @@ def strip_srch(exp_date, type):
         return stripped_date.day
 
 
+def weight_event(is_booking):
+
+    if is_booking == 1:
+        weight = 1
+    else:
+        weight = 0.25
+
+    return weight
+
+
+
 
 def date_subtract(date1,date2):
     stripped_date1 = datetime.strptime(date1, "%Y-%m-%d")
@@ -76,8 +87,6 @@ def weekend_check(day):
         return 0
 
 def check_time(time, day_time):
-    day_bins = ["6:00:00","10:00:00","14:00:00:","16:00:00","20:00:00","24:00:00"]
-
     import datetime
 
     time_1 = datetime.time(0, 0, 0)
