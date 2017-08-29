@@ -99,3 +99,4 @@ ENV/
 
 .idea/workspace.xml
 
+!/docker-compose.yml

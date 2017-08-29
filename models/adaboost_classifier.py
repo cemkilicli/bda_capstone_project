@@ -1,73 +1,57 @@
 #!/usr/bin/python
 import sys
 sys.path.append("./tools/")
-from sklearn.model_selection import train_test_split
 import pandas as pd
+import numpy as np
+from ml_metrics import mapk
+from sklearn.metrics import accuracy_score
 
 #Load clean sample data
-exp_data = pd.read_csv('../exp_data/sampled/exp_data_sample_balanced.csv', delimiter=',')
+exp_data_train = pd.read_csv("../exp_data/processed/clean_sample_train.csv", delimiter=',')
+exp_data_test = pd.read_csv("../exp_data/processed/clean_sample_test.csv", delimiter=',')
 
 
-#Set column names
-exp_data_col_names = list(exp_data)
-
+exp_data_train = exp_data_train.sample(frac=0.7, random_state=42)
 
 
 #Create Data & Label set
-exp_data_labels = exp_data["hotel_cluster"]
-drop_labels = ["hotel_cluster", "date_time","srch_ci","srch_co","orig_destination_distance"]
+exp_data_train_labels = exp_data_train["hotel_cluster"]
+exp_data_test_labels = exp_data_test["hotel_cluster"]
 
-for i in drop_labels:
-    exp_data_data = exp_data.drop(drop_labels, axis=1)
+exp_data_train_features = exp_data_train.drop(["hotel_cluster","date_time","srch_ci","srch_co","event_date","event_time"], axis=1)
+exp_data_test_features = exp_data_test.drop(["hotel_cluster","date_time","srch_ci","srch_co","event_date","event_time"], axis=1)
 
+print "Train Feature shape:",exp_data_train_features.shape,
+print "Train label shape:",exp_data_train_labels.shape
+print "Test Feature shape:",exp_data_test_features.shape,
+print "Train label shape:",exp_data_test_labels.shape,
 
-"""
-#Handle missing values in Training Data Set
-imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-imp.fit(exp_data_data)
-exp_data_data = imp.transform(exp_data_data)
-
-"""
-
-columns = exp_data_data.columns
-
-
-# Create train test split
-features_train, features_test, labels_train, labels_test = train_test_split(exp_data_data, exp_data_labels, test_size=0.25, random_state=42)
 
 from sklearn.ensemble import AdaBoostClassifier
 from sklearn.tree import DecisionTreeClassifier
-clf_rand = AdaBoostClassifier( DecisionTreeClassifier(max_depth=1), n_estimators=200,
-                               algorithm="SAMME.R",
-                               learning_rate=0.5)
+
+clf_tre = DecisionTreeClassifier()
+
+ada_clf = AdaBoostClassifier (
+    DecisionTreeClassifier(), n_jobs=-1, learning_rate=0.5, algorithm="SAMME.R"
+)
+
+ada_clf.fit(exp_data_train_features, exp_data_train_labels)
+
+pred = ada_clf.predict(exp_data_test_features)
+pred_prob = ada_clf.predict_proba(exp_data_test_features)
+
+probs = pd.DataFrame(pred_prob)
+probs.columns = np.unique(exp_data_test_labels.sort_values().values)
+
+preds = pd.DataFrame([list([r.sort_values(ascending=False)[:5].index.values]) for i, r in probs.iterrows()])
+
+print "map@5:", mapk([[l] for l in exp_data_test_labels], preds[0], 5)
+print "accuracy is", accuracy_score(exp_data_test_labels, pred)
 
 
 
-clf_rand.fit(features_train,labels_train)
 
-pred = clf_rand.predict(features_test)
-pred_prob = clf_rand.predict_proba(features_test)
+"""
 
-print pred
-print pred_prob
-
-from sklearn.metrics import accuracy_score
-print "accuracy is", accuracy_score(labels_test, pred)
-from sklearn.metrics import r2_score
-print "R-squared Error",r2_score(pred,labels_test)
-from sklearn.model_selection import cross_val_score
-print "cross val score", cross_val_score(clf_rand, features_train,labels_train,scoring="accuracy")
-
-from sklearn.metrics import confusion_matrix
-conf_mx = confusion_matrix(labels_train, pred)
-
-print conf_mx
-
-
-
-importance = clf_rand.feature_importances_
-
-print "Feature Importance"
-for column in columns:
-    print column, importance(column)
-
+"""

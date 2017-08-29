@@ -1,64 +1,54 @@
 #!/usr/bin/python
 import sys
 sys.path.append("./tools/")
-from sklearn.model_selection import train_test_split
-from sklearn.metrics import confusion_matrix
 import pandas as pd
 import numpy as np
-import matplotlib.pyplot as plt
-from plot_confusion_matrix import plot_confusion_matrix
-from sklearn.preprocessing import Imputer
+from ml_metrics import mapk
 
 #Load clean sample data
-exp_data = pd.read_csv('../exp_data/sampled/exp_data_sample_booked.csv', delimiter=',')
+exp_data_train = pd.read_csv("../exp_data/processed/clean_sample_train.csv", delimiter=',')
+exp_data_test = pd.read_csv("../exp_data/processed/clean_sample_test.csv", delimiter=',')
 
 
-#Set column names
-exp_data_col_names = list(exp_data)
+exp_data_train = exp_data_train.sample(frac=0.7, random_state=42)
 
 
 #Create Data & Label set
-exp_data_labels = exp_data["hotel_cluster"]
-drop_labels = ["hotel_cluster", "date_time","srch_ci","srch_co"]
+exp_data_train_labels = exp_data_train["hotel_cluster"]
+exp_data_test_labels = exp_data_test["hotel_cluster"]
 
-for i in drop_labels:
-    exp_data_data = exp_data.drop(drop_labels, axis=1)
+exp_data_train_features = exp_data_train.drop(["hotel_cluster","date_time","srch_ci","srch_co","event_date","event_time"], axis=1)
+exp_data_test_features = exp_data_test.drop(["hotel_cluster","date_time","srch_ci","srch_co","event_date","event_time"], axis=1)
 
+print "Train Feature shape:",exp_data_train_features.shape,
+print "Train label shape:",exp_data_train_labels.shape
+print "Test Feature shape:",exp_data_test_features.shape,
+print "Train label shape:",exp_data_test_labels.shape,
 
-#Handle missing values in Training Data Set
-imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-imp.fit(exp_data_data)
-exp_data_data = imp.transform(exp_data_data)
-
-
-# Create train test split
-features_train, features_test, labels_train, labels_test = train_test_split(exp_data_data, exp_data_labels, test_size=0.25, random_state=42)
 
 
 from sklearn.naive_bayes import GaussianNB
-clf = GaussianNB()
-clf.fit(features_train, labels_train)
-pred = clf.predict(features_test)
 
+clf_rand = GaussianNB()
+clf_rand.fit(exp_data_train_features,exp_data_train_labels)
 
+pred = clf_rand.predict(exp_data_test_features)
+print pred
 
-# Print Confusion Matrix
-class_names = [ "Actual", "Predicted"]
-cnf_matrix = confusion_matrix(labels_test, pred)
-np.set_printoptions(precision=2)
+pred_prob = clf_rand.predict_proba(exp_data_test_features)
+print pred_prob
 
-# Plot non-normalized confusion matrix
-plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=class_names,
-                      title='Confusion matrix, without normalization - Gusian NB')
-# Plot normalized confusion matrix
-plt.figure()
-plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
-                      title='Normalized confusion matrix - Gusian NB')
-plt.show()
+probs = pd.DataFrame(pred_prob)
+probs.columns = np.unique(exp_data_test_labels.sort_values().values)
 
+preds = pd.DataFrame([list([r.sort_values(ascending=False)[:5].index.values]) for i,r in probs.iterrows()])
+
+print"map@5:", mapk([[l] for l in exp_data_test_labels], preds[0], 5)
 from sklearn.metrics import accuracy_score
-# Print Accuracy Score
-print "Accuracy is", accuracy_score(pred,labels_test)
-print "The number of correct predictions is", accuracy_score(pred,labels_test, normalize=False)
-print "Total sample used is", len(pred)  # number of all of the predictions
+print "accuracy is", accuracy_score(exp_data_test_labels, pred)
+
+
+"""
+map@5: 0.105944397806
+accuracy is 0.0595232074766
+"""

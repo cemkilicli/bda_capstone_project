@@ -13,73 +13,64 @@ from math import sqrt
 from ml_metrics import mapk
 
 #Load clean sample data
-exp_data = pd.read_csv("../exp_data/processed/clean_sample_train.csv", delimiter=',')
+exp_data_train = pd.read_csv("../exp_data/processed/clean_sample_train.csv", delimiter=',')
+exp_data_test = pd.read_csv("../exp_data/processed/clean_sample_test.csv", delimiter=',')
 
 
-exp_data = exp_data.dropna(subset=["0"], how="all")
-exp_data = exp_data.dropna(subset=["1"], how="all")
-exp_data = exp_data.dropna(subset=["2"], how="all")
-
-
-print exp_data.isnull().any()
-print exp_data.info()
-
-#Set column names
-exp_data_col_names = list(exp_data)
+exp_data_train = exp_data_train.sample(frac=0.7, random_state=42)
 
 
 #Create Data & Label set
-exp_data_labels = exp_data["hotel_cluster"]
+exp_data_train_labels = exp_data_train["hotel_cluster"]
+exp_data_test_labels = exp_data_test["hotel_cluster"]
 
-#exp_data['orig_destination_distance'] = exp_data['orig_destination_distance'].fillna(-1)
+exp_data_train_features = exp_data_train.drop(["hotel_cluster","date_time","srch_ci","srch_co","event_date","event_time"], axis=1)
+exp_data_test_features = exp_data_test.drop(["hotel_cluster","date_time","srch_ci","srch_co","event_date","event_time"], axis=1)
 
-drop_labels = ["hotel_cluster", "date_time","srch_ci","srch_co","event_date","event_time"]
-
-for i in drop_labels:
-    exp_data_data = exp_data.drop(drop_labels, axis=1)
-
-
-"""
-#Handle missing values in Training Data Set
-imp = Imputer(missing_values='NaN', strategy='mean', axis=0)
-imp.fit(exp_data_data)
-exp_data_data = imp.transform(exp_data_data)
-
-"""
-
-columns = exp_data_data.columns
+print "Train Feature shape:",exp_data_train_features.shape,
+print "Train label shape:",exp_data_train_labels.shape
+print "Test Feature shape:",exp_data_test_features.shape,
+print "Train label shape:",exp_data_test_labels.shape,
 
 
-# Create train test split
-features_train, features_test, labels_train, labels_test = train_test_split(exp_data_data, exp_data_labels, test_size=0.25, random_state=42)
 
 from sklearn.ensemble import RandomForestClassifier
 
-clf_rand = RandomForestClassifier(n_jobs=-1, n_estimators=350)
-clf_rand.fit(features_train,labels_train)
+clf_rand = RandomForestClassifier(n_jobs=-1, n_estimators=150, min_samples_leaf= 50,random_state=42, oob_score = True, max_features="sqrt")
+clf_rand.fit(exp_data_train_features,exp_data_train_labels)
 
-pred = clf_rand.predict(features_test)
-pred_prob = clf_rand.predict_proba(features_test)
-
+pred = clf_rand.predict(exp_data_test_features)
 print pred
+
+pred_prob = clf_rand.predict_proba(exp_data_test_features)
 print pred_prob
 
 probs = pd.DataFrame(pred_prob)
-probs.columns = np.unique(labels_test.sort_values().values)
+probs.columns = np.unique(exp_data_test_labels.sort_values().values)
 
 preds = pd.DataFrame([list([r.sort_values(ascending=False)[:5].index.values]) for i,r in probs.iterrows()])
 
-print"map@5:", mapk([[l] for l in labels_test], preds[0], 5)
-
+print"map@5:", mapk([[l] for l in exp_data_test_labels], preds[0], 5)
 from sklearn.metrics import accuracy_score
-print "accuracy is", accuracy_score(labels_test, pred)
-
+print "accuracy is", accuracy_score(exp_data_test_labels, pred)
 
 """
-importance = clf_rand.feature_importances_
-
-print "Feature Importance"
-for column in columns:
-    print column, importance(column.iloc)
+default
+map@5: 0.407975030933
+accuracy is 0.340764041307
 """
 
+"""
+n_jobs=-1, n_estimators=150, min_samples_leaf= 50,random_state=42
+
+"""
+
+"""
+n_jobs=-1, n_estimators=150, min_samples_leaf= 50,random_state=42, oob_score = True, max_features="sqrt"
+
+"""
+
+"""
+n_jobs=-1, n_estimators=150, min_samples_leaf= 50,random_state=42, max_features="sqrt"
+
+"""

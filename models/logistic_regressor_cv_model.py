@@ -4,7 +4,6 @@ sys.path.append("./tools/")
 import pandas as pd
 import numpy as np
 from ml_metrics import mapk
-from sklearn.metrics import accuracy_score
 
 #Load clean sample data
 exp_data_train = pd.read_csv("../exp_data/processed/clean_sample_train.csv", delimiter=',')
@@ -27,31 +26,41 @@ print "Test Feature shape:",exp_data_test_features.shape,
 print "Train label shape:",exp_data_test_labels.shape,
 
 
-from sklearn.ensemble import BaggingClassifier
-from sklearn.tree import DecisionTreeClassifier
 
-clf_tre = DecisionTreeClassifier()
+from sklearn.linear_model import LogisticRegressionCV
 
-bag_clf = BaggingClassifier (
-    DecisionTreeClassifier(), n_jobs=-1
-)
+clf_rand = LogisticRegressionCV(penalty="l2", random_state=42)
+clf_rand.fit(exp_data_train_features,exp_data_train_labels)
 
-bag_clf.fit(exp_data_train_features, exp_data_train_labels)
+pred = clf_rand.predict(exp_data_test_features)
+print pred
 
-pred = bag_clf.predict(exp_data_test_features)
-pred_prob = bag_clf.predict_proba(exp_data_test_features)
+pred_prob = clf_rand.predict_proba(exp_data_test_features)
+print pred_prob
 
 probs = pd.DataFrame(pred_prob)
 probs.columns = np.unique(exp_data_test_labels.sort_values().values)
 
-preds = pd.DataFrame([list([r.sort_values(ascending=False)[:5].index.values]) for i, r in probs.iterrows()])
+preds = pd.DataFrame([list([r.sort_values(ascending=False)[:5].index.values]) for i,r in probs.iterrows()])
 
-print "map@5:", mapk([[l] for l in exp_data_test_labels], preds[0], 5)
+print"map@5:", mapk([[l] for l in exp_data_test_labels], preds[0], 5)
+from sklearn.metrics import accuracy_score
 print "accuracy is", accuracy_score(exp_data_test_labels, pred)
 
 
+"""
+default, random_state=42
 
 
 """
+"""
+penalty="l2", random_state=42
+
+
+"""
+
+"""
+penalty="l1", random_state=42
+
 
 """
