@@ -4,6 +4,9 @@ sys.path.append("./tools/")
 import pandas as pd
 import numpy as np
 from ml_metrics import mapk
+from sklearn.metrics import confusion_matrix
+from plot_confusion_matrix import plot_confusion_matrix
+import matplotlib.pyplot as plt
 
 #Load clean sample data
 exp_data_train = pd.read_csv("../exp_data/processed/clean_sample_train.csv", delimiter=',')
@@ -29,7 +32,9 @@ print "Train label shape:",exp_data_test_labels.shape,
 
 from sklearn.neighbors import KNeighborsClassifier
 
-clf_rand = KNeighborsClassifier()
+n_neighbors = len(exp_data_train_labels.unique())
+
+clf_rand = KNeighborsClassifier(weights="distance", algorithm="kd_tree", n_jobs = -1)
 clf_rand.fit(exp_data_train_features,exp_data_train_labels)
 
 pred = clf_rand.predict(exp_data_test_features)
@@ -46,6 +51,24 @@ preds = pd.DataFrame([list([r.sort_values(ascending=False)[:5].index.values]) fo
 print"map@5:", mapk([[l] for l in exp_data_test_labels], preds[0], 5)
 from sklearn.metrics import accuracy_score
 print "accuracy is", accuracy_score(exp_data_test_labels, pred)
+
+
+# Compute confusion matrix
+class_names = exp_data_train_labels.unique()
+cnf_matrix = confusion_matrix(exp_data_test_labels, pred)
+np.set_printoptions(precision=2)
+
+
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=class_names,
+                      title='KNN - Confusion matrix, without normalization')
+
+# Plot normalized confusion matrix
+plt.figure()
+plot_confusion_matrix(cnf_matrix, classes=class_names, normalize=True,
+                      title='KNN - Normalized confusion matrix')
+
+plt.show()
 
 """
 map@5: 0.245661767929

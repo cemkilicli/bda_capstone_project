@@ -4,39 +4,39 @@ import seaborn as sns
 import matplotlib.pyplot as plt
 
 #Load clean sample data
-exp_data_train = pd.read_csv('../exp_data/sampled/sample_mini.csv', delimiter=',')
+exp_data_train = pd.read_csv('../exp_data/sampled/sample_train.csv', delimiter=',')
 exp_data_destinations = pd.read_csv('../exp_data/original_data/destinations.csv', delimiter=',')
 
-#print exp_data_train["hotel_cluster"].value_counts()
+#Plot the hotel cluster to understand the skewness of data
+sns.countplot(x='hotel_cluster', data = exp_data_train, color="g")
+plt.yticks(label='small')
+plt.ylabel('Frequency')
+plt.xticks(label='small', rotation=90)
+plt.xlabel('Hotel Clusters')
+plt.show()
 
-#groups_count = exp_data_train.groupby(["hotel_cluster"]).count()
+sns.distplot(exp_data_train.hotel_cluster)
+plt.yticks(label='small')
+plt.ylabel('Frequency')
+plt.xticks(label='small', rotation=90)
+plt.xlabel('Hotel Clusters')
+plt.show()
 
 
+
+
+
+
+"""
 
 ### ---- Trainning Data Analysis ---- ###
 #Print data frame information
 print exp_data_train.info()
 print exp_data_train.head(5)
 
-#exp_data_train = exp_data_train.groupby(["hotel_cluster","srch_destination_id","srch_destination_type_id"], as_index=False).agg({"is_booking":"sum"})
 
 
 
-sns.stripplot(x="srch_ci", y="hotel_cluster", hue="is_booking",
-              data=exp_data_train, dodge=True, jitter=True,
-              alpha=.25, zorder=1)
-plt.show()
-
-#print hotel_cluster
-
-"""1.
-#Plot the hotel cluster to understand the skewness of data
-sns.countplot(x='hotel_cluster', data = exp_data_train)
-plt.yticks(label='small')
-plt.ylabel('Frequency')
-plt.xticks(label='small', rotation=90)
-plt.xlabel('Hotel Clusters')
-plt.show()
 
 
 #Plot the hotel cluster to understand the skewness of data
@@ -70,6 +70,11 @@ plt.xticks(rotation=30, label='small')
 
 plt.show()
 
+#exp_data_train = exp_data_train.groupby(["hotel_cluster","srch_destination_id","srch_destination_type_id"], as_index=False).agg({"is_booking":"sum"})
+sns.stripplot(x="srch_ci", y="hotel_cluster", hue="is_booking",
+              data=exp_data_train, dodge=True, jitter=True,
+              alpha=.25, zorder=1)
+plt.show()
 
 
 ### ---- Destinations Data Analysis ---- ###

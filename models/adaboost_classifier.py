@@ -11,7 +11,7 @@ exp_data_train = pd.read_csv("../exp_data/processed/clean_sample_train.csv", del
 exp_data_test = pd.read_csv("../exp_data/processed/clean_sample_test.csv", delimiter=',')
 
 
-exp_data_train = exp_data_train.sample(frac=0.7, random_state=42)
+exp_data_train = exp_data_train.sample(frac=0.5, random_state=0)
 
 
 #Create Data & Label set
@@ -24,7 +24,7 @@ exp_data_test_features = exp_data_test.drop(["hotel_cluster","date_time","srch_c
 print "Train Feature shape:",exp_data_train_features.shape,
 print "Train label shape:",exp_data_train_labels.shape
 print "Test Feature shape:",exp_data_test_features.shape,
-print "Train label shape:",exp_data_test_labels.shape,
+print "Test label shape:",exp_data_test_labels.shape,
 
 
 from sklearn.ensemble import AdaBoostClassifier
@@ -33,7 +33,7 @@ from sklearn.tree import DecisionTreeClassifier
 clf_tre = DecisionTreeClassifier()
 
 ada_clf = AdaBoostClassifier (
-    DecisionTreeClassifier(), n_jobs=-1, learning_rate=0.5, algorithm="SAMME.R"
+    DecisionTreeClassifier(), learning_rate=0.5, algorithm="SAMME.R"
 )
 
 ada_clf.fit(exp_data_train_features, exp_data_train_labels)

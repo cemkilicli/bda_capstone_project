@@ -29,7 +29,7 @@ print "Train label shape:",exp_data_test_labels.shape,
 
 from sklearn.neural_network import MLPClassifier
 
-clf_rand = MLPClassifier()
+clf_rand = MLPClassifier(solver='lbfgs', alpha=1e-5, hidden_layer_sizes=(5, 2), random_state=1)
 clf_rand.fit(exp_data_train_features,exp_data_train_labels)
 
 pred = clf_rand.predict(exp_data_test_features)
